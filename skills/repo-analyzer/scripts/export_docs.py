@@ -31,6 +31,7 @@ import render_report as rr  # noqa: E402
 
 esc = rr.esc
 CDN_MERMAID = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"
+CDN_ELK = "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.2/dist/mermaid-layout-elk.esm.min.mjs"
 FONT_LINK = ("https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800"
              "&family=JetBrains+Mono:wght@400;600&display=swap")
 SANS = '"Archivo", "Segoe UI", "Helvetica Neue", Arial, "Liberation Sans", Carlito, "DejaVu Sans", sans-serif'
@@ -585,7 +586,7 @@ def meta_of(facts: dict, data: dict, t: dict, lang: str) -> dict:
 
 MERMAID_CFG = {
     "startOnLoad": False, "securityLevel": "strict", "theme": "base",
-    "flowchart": {"curve": "basis", "htmlLabels": True, "padding": 12},
+    "flowchart": {"curve": "linear", "htmlLabels": True, "padding": 12},
     "sequence": {"mirrorActors": False, "messageAlign": "left", "actorMargin": 30, "width": 130, "diagramMarginX": 8,
                  "diagramMarginY": 8, "boxMargin": 6, "noteMargin": 8},
     "themeVariables": {
@@ -626,7 +627,9 @@ def render_assets(browser, figs: dict[str, str], mermaid_js: str | None, want_pn
                            "for offline use pass --mermaid-js /path/to/mermaid.min.js") from None
     page.evaluate("""async () => { await Promise.race([document.fonts.load('14px Archivo'),
                                                         new Promise(r => setTimeout(r, 3000))]); }""")
-    page.evaluate("cfg => mermaid.initialize(cfg)", MERMAID_CFG)
+    elk = page.evaluate("""async url => { try { mermaid.registerLayoutLoaders((await import(url)).default); return true; }
+                                       catch (e) { return false; } }""", CDN_ELK)  # offline: dagre fallback
+    page.evaluate("cfg => mermaid.initialize(cfg)", {**MERMAID_CFG, "layout": "elk" if elk else "dagre"})
     assets = {}
     for i, (key, code) in enumerate(figs.items()):
         try:

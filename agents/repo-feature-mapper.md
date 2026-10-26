@@ -47,7 +47,9 @@ A "feature" is a capability someone (end user, admin, another system, a develope
 - Raw Mermaid in the JSON string with `\n`, no ``` fences. Start with `flowchart LR` (or `TD` for many categories).
 - Node ids = feature ids with `-` replaced by `_`. Always quote labels: `order_management["Order management"]`.
 - One `subgraph cat_user_facing["User-facing"]` … `end` per category that has features. Never use `end` as an id.
-- Dependency edges: `checkout --> authentication`. ≤ 30 nodes.
+- Dependency edges: `checkout --> authentication`; only direct, important dependencies.
+- **Keep it simple:** ≤ 12 nodes and ≤ 15 edges (`render_report.py --check` reports anything larger). With more
+  features, show the 12 most important (array order) and leave the rest to the feature table.
 - Translation-safe syntax (the report is translated later and the diagram skeleton is compared): put every human-readable label in brackets/quotes, edge labels as `-->|"label"|` (not `-- label -->`), subgraphs as `subgraph id["Label"]`.
 
 ## Finish

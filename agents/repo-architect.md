@@ -53,7 +53,12 @@ so it must be structured, grounded, and valid JSON.
 - Flowcharts: start with `flowchart LR` or `flowchart TD`. Node ids are simple identifiers (`api_server`, `orders_db`). Always quote labels: `api_server["API server (FastAPI)"]`. Edge labels: `a -->|"HTTP/JSON"| b`.
 - Shapes: person/actor `user(["Customer"])`, database `db[("PostgreSQL")]`, queue/topic `q[["orders queue"]]`, external system `ext{{"Stripe"}}`.
 - Group with `subgraph backend["Backend"]` … `end`. Never use `end`, `graph`, `subgraph` as node ids.
-- Keep each diagram ≤ 25 nodes. Only `<br/>` is allowed as HTML inside labels.
+- **Keep diagrams simple — they are read, not admired.** Each flowchart: ≤ 12 nodes and ≤ 15 edges; each erDiagram:
+  ≤ 10 entities. `render_report.py --check` reports anything larger. Show the main path only: leave out helpers,
+  config, logging and edges a reader would assume. Merge related nodes into one (`workers["Background workers"]`).
+  If a view really needs more, split it into two diagrams or put the detail in text, never in a denser diagram.
+- One edge per pair of nodes, one direction. Edge labels only where they add information (protocol, data), ≤ 3 words.
+- Only `<br/>` is allowed as HTML inside labels.
 - erDiagram: `USER ||--o{ ORDER : places`; attributes as `USER {\n int id PK\n string email\n}` with single-word types and names.
 - Translation-safe syntax (the report is translated later and the diagram skeleton is compared): put every human-readable label in brackets/quotes, edge labels as `-->|"label"|` (not `-- label -->`), subgraphs as `subgraph id["Label"]`.
 

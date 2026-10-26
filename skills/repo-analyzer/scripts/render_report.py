@@ -327,6 +327,37 @@ def check_shape(obj, spec, where: str, issues: list):
             check_shape(item, spec[0], f"{where}[{i}]", issues)
 
 
+# readability limits; the agent prompts state the same numbers
+LIMITS = {"flowchart": (12, 15), "sequenceDiagram": (6, 16), "erDiagram": (10, None)}
+ARROW = re.compile(r"[<ox]?(?:-{2,}|={2,}|-\.+-)[>ox]?")
+SEQ_MSG = re.compile(r"^\s*([\w]+)\s*(?:-{1,2}>>|-{1,2}\)|-{1,2}x|-{1,2}>)\s*[+-]?\s*([\w]+)\s*:", re.M)
+SKIP = ("subgraph", "end", "classDef", "class ", "style", "linkStyle", "click", "direction", "%%")
+
+
+def diagram_size(body: str) -> tuple[str, int, int] | None:
+    """(kind, nodes, edges) for flowcharts / sequence (participants, messages) / ER (entities, relations)."""
+    if body.startswith(("flowchart", "graph")):
+        nodes, edges = set(), 0
+        for line in body.splitlines()[1:]:
+            line = re.sub(r'"[^"]*"|\|[^|\n]*\||:::\w+', "", line).strip()
+            if not line or line.startswith(SKIP):
+                continue
+            edges += len(ARROW.findall(line))
+            line = re.sub(r"[\[\(\{>][^\]\)\}]*[\]\)\}]+", " ", ARROW.sub(" ", line))
+            nodes.update(re.findall(r"[A-Za-z_][\w-]*", line))
+        return "flowchart", len(nodes), edges
+    if body.startswith("sequenceDiagram"):
+        parts = set(re.findall(r"^\s*(?:participant|actor)\s+(\w+)", body, re.M))
+        msgs = SEQ_MSG.findall(body)
+        parts.update(x for m in msgs for x in m)
+        return "sequenceDiagram", len(parts), len(msgs)
+    if body.startswith("erDiagram"):
+        rels = re.findall(r"^\s*([\w-]+)\s+\S*--\S*\s+([\w-]+)", body, re.M)
+        ents = {x for r in rels for x in r} | set(re.findall(r"^\s*([\w-]+)\s*\{", body, re.M))
+        return "erDiagram", len(ents), len(rels)
+    return None
+
+
 def mermaid_lint(code: str, where: str, issues: list):
     code = strip_fences(code)
     if not code:
@@ -345,6 +376,13 @@ def mermaid_lint(code: str, where: str, issues: list):
             decl = m.group(2)
             if " as " not in decl and " " in decl.strip():
                 issues.append(f"{where}: participant '{decl[:40]}' has spaces; use 'participant Id as Label'")
+    size = diagram_size(body)
+    if size and size[0] in LIMITS:
+        kind, n, e = size
+        max_n, max_e = LIMITS[kind]
+        if n > max_n or (max_e and e > max_e):
+            issues.append(f"{where}: diagram too dense ({n} nodes, {e} edges; limit {max_n}/{max_e or '-'}); "
+                          "drop minor nodes/edges or split it into two diagrams")
 
 
 class Refs:
@@ -617,7 +655,7 @@ def mermaid_id(label: str, cache: dict) -> str:
     return cache[label]
 
 
-def dep_graph_mermaid(facts: dict, limit: int = 40) -> str:
+def dep_graph_mermaid(facts: dict, limit: int = 12) -> str:
     edges = facts.get("dependency_graph", {}).get("dir_edges", [])[:limit]
     if not edges:
         return ""
@@ -1087,8 +1125,11 @@ const escapeHtml = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'
 let mermaid = null;
 try {
   mermaid = (await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs')).default;
-  mermaid.initialize({startOnLoad:false, securityLevel:'strict', theme:'base',
-    flowchart:{curve:'basis', htmlLabels:true, padding:12}, sequence:{mirrorActors:false, messageAlign:'left'},
+  let layout = 'dagre';  // ELK routes edges orthogonally with fewer crossings; dagre is the offline fallback
+  try { mermaid.registerLayoutLoaders((await import('https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.2/dist/mermaid-layout-elk.esm.min.mjs')).default); layout = 'elk'; }
+  catch (e) { console.warn(e); }
+  mermaid.initialize({startOnLoad:false, securityLevel:'strict', theme:'base', layout,
+    flowchart:{curve:'linear', htmlLabels:true, padding:12}, sequence:{mirrorActors:false, messageAlign:'left'},
     themeVariables:{fontFamily:'Archivo, system-ui, sans-serif', fontSize:'14px',
       primaryColor:'#FBFCFA', primaryTextColor:'#17232C', primaryBorderColor:'#17232C', lineColor:'#4A5A60',
       secondaryColor:'#E3EAE2', tertiaryColor:'#F3F5F0', clusterBkg:'#F3F5F0', clusterBorder:'#8FA08F',

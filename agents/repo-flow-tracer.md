@@ -51,7 +51,9 @@ Typical budget: 5–12 file reads per feature.
 - Declare participants first with short ids and labels: `participant C as Client`, `participant API as Orders API`, `participant DB as PostgreSQL`. Use `actor U as User` for humans.
 - Calls `A->>B: create_order(payload)`, replies `B-->>A: 201 {id}`, async/fire-and-forget `A-)Q: send_receipt.delay(id)`.
 - Blocks: `alt valid token` … `else invalid` … `end`, `opt`, `loop`. Optionally `Note over A,B: text`.
-- Do not use `;` or `#` inside message text; keep messages short. ≤ 10 participants, ≤ 30 messages.
+- Do not use `;` or `#` inside message text; keep messages short.
+- **Keep it simple:** ≤ 6 participants and ≤ 16 messages (`render_report.py --check` reports anything larger). Merge
+  layers a reader does not need to see (route + controller + service → one participant). Put detail in `steps`.
 - Translation-safe syntax (the report is translated later and the diagram skeleton is compared): declare every participant as `participant Id as Label` and put human-readable text only after `:` or after `alt`/`else`/`loop`/`opt`.
 
 ## Finish
