@@ -13,14 +13,12 @@ documents: overview, architecture diagrams, feature map, execution flows (sequen
 
 ## Install
 
-From a local clone:
-
 ```bash
-claude plugin marketplace add /path/to/repo-analyzer-plugin
+claude plugin marketplace add TarcosS/repo-analyzer-plugin
 claude plugin install repo-analyzer@repo-analyzer
 ```
 
-From a Git host, replace the path with the repository URL or `owner/repo`.
+Update later with `claude plugin marketplace update repo-analyzer`.
 
 ## Requirements
 
@@ -33,3 +31,17 @@ From a Git host, replace the path with the repository URL or `owner/repo`.
 
 Ask Claude Code: "analyze this repo" or "map the architecture of <path>". Output goes to `<repo>/.repo-analysis/`;
 open `index.html`. The target repository is not modified.
+
+## Branding
+
+Brands stay on your machine; the plugin ships none. Put each brand in its own folder:
+
+```
+~/.claude/repo-analyzer/brands/        (or set REPO_ANALYZER_BRANDS)
+  acme/
+    logo.png          cover + page header logo in Word/PDF
+    instruction.md    when to use this brand, and wording/tone rules for the report
+```
+
+Say "use the acme brand" and the report uses that folder. With no brand named, a brand is used only when its
+`instruction.md` says it applies to the repo being analyzed (for example by path or organization).

@@ -1286,6 +1286,9 @@ a.big{{font-weight:800;font-stretch:115%;font-size:1.4rem}}</style></head>
 <ul class="choose">{rows}</ul></main></body></html>"""
 
 
+BRANDS_ENV, BRANDS_DEFAULT = "REPO_ANALYZER_BRANDS", "~/.claude/repo-analyzer/brands"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out", type=Path, required=True)
@@ -1298,6 +1301,8 @@ def main() -> int:
                                                        "(default: jsDelivr CDN; set a local file for offline use)")
     ap.add_argument("--repo-url", default=None, help="web URL used for source links (defaults to git remote)")
     ap.add_argument("--logo", default=None, help="brand logo PNG shown on the docx/pdf cover and page headers")
+    ap.add_argument("--brand", default=None, help="brand folder name under the brands dir; uses its logo.png "
+                                                  f"(brands dir: ${BRANDS_ENV} or {BRANDS_DEFAULT})")
     ap.add_argument("--check", action="store_true", help="validate only; exit 1 when issues are found")
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args()
@@ -1329,6 +1334,12 @@ def main() -> int:
         return 0
 
     formats = {x.strip() for x in args.formats.split(",") if x.strip()}
+    if args.brand and not args.logo:
+        brand = Path(os.environ.get(BRANDS_ENV) or BRANDS_DEFAULT).expanduser() / args.brand
+        if not (brand / "logo.png").is_file():
+            print(f"error: {brand}/logo.png not found", file=sys.stderr)
+            return 2
+        args.logo = str(brand / "logo.png")
     if args.logo:
         os.environ["REPO_ANALYZER_LOGO"] = str(Path(args.logo).expanduser().resolve())
     docs: dict[str, list[tuple[str, str]]] = {}

@@ -142,7 +142,24 @@ Parity issues mean the translation changed something it must not (ids, refs, enu
 skeleton): fix the target file to match the source. If the render prints `[docs] skipped Word/PDF: missing ...`, tell the
 user the exact install command it printed; HTML is still produced. For offline machines add `--mermaid-js <path to mermaid.min.js>`.
 `--logo <png>` puts a brand logo on the Word/PDF cover and every page header. Pass it only when the user gives a logo
-or their own instructions name one.
+or names a brand (see Branding).
+
+## Branding
+
+Brands live on the user's machine, not in this plugin: `$REPO_ANALYZER_BRANDS`, else `~/.claude/repo-analyzer/brands/`.
+
+```
+brands/<brand-name>/
+  logo.png          used on the Word/PDF cover and page headers
+  instruction.md    when to use this brand, plus any wording/tone rules for the report text
+```
+
+- The user names a brand ("use the ananas-studio brand") → use that folder. If it does not exist, list the folders
+  that do and ask.
+- No brand named → read each `instruction.md`; use a brand only if its instruction says it applies to this repo
+  (for example by path or organization). Otherwise use no brand.
+- Read the chosen `instruction.md` before step 4 and follow it in the text you and the subagents write.
+- Render with `--brand <brand-name>` (it picks `logo.png`). Say in the report-back which brand was used.
 
 ### 8. Report back
 
