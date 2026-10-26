@@ -1,0 +1,11 @@
+{
+  "name": "repo-analyzer",
+  "owner": { "name": "repo-analyzer maintainers" },
+  "plugins": [
+    {
+      "name": "repo-analyzer",
+      "source": "./",
+      "description": "Repository analysis report: HTML + Word + PDF, with architecture, features, flows and code health."
+    }
+  ]
+}

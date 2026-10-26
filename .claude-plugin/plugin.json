@@ -1,0 +1,12 @@
+{
+  "name": "repo-analyzer",
+  "version": "1.0.0",
+  "description": "Analyzes a whole repository and produces a multi-page HTML report plus Word and PDF documents (architecture, features, execution flows, code health, onboarding), in English and Turkish by default.",
+  "keywords": [
+    "codebase",
+    "architecture",
+    "documentation",
+    "audit",
+    "onboarding"
+  ]
+}
