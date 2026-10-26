@@ -154,7 +154,7 @@ brands/<brand-name>/
   instruction.md    when to use this brand, plus any wording/tone rules for the report text
 ```
 
-- The user names a brand ("use the ananas-studio brand") → use that folder. If it does not exist, list the folders
+- The user names a brand ("use the acme brand") → use that folder. If it does not exist, list the folders
   that do and ask.
 - No brand named → read each `instruction.md`; use a brand only if its instruction says it applies to this repo
   (for example by path or organization). Otherwise use no brand.
